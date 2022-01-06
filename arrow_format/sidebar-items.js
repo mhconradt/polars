@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["ipc","Generated code of flatbuffers (.fbs) in format"]]});

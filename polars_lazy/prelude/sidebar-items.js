@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["TypeCoercionRule",""]],"trait":[["Optimize",""],["Optimize",""]]});
