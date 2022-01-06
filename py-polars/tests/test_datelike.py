@@ -45,22 +45,27 @@ def test_filter_date() -> None:
     assert df.filter(pl.col("date") < pl.lit(datetime(2020, 1, 5))).shape[0] == 3
 
 
-def test_series_add_timedelta() -> None:
-    dates = pl.Series(
-        [datetime(2000, 1, 1), datetime(2027, 5, 19), datetime(2054, 10, 4)]
+def test_time_arithmetic_literal() -> None:
+    # subtracting a date / datetime literal from a date / datetime series
+    days_2020 = pl.date_range(
+        datetime(2020, 1, 1), datetime(2020, 12, 31), interval="1d"
     )
-    out = pl.Series(
-        [datetime(2027, 5, 19), datetime(2054, 10, 4), datetime(2082, 2, 19)]
-    )
-    assert (dates + timedelta(days=10_000)).series_equal(out)
-
-
-def test_series_add_datetime() -> None:
-    deltas = pl.Series([timedelta(10_000), timedelta(20_000), timedelta(30_000)])
-    out = pl.Series(
-        [datetime(2027, 5, 19), datetime(2054, 10, 4), datetime(2082, 2, 19)]
-    )
-    assert (deltas + pl.Series([datetime(2000, 1, 1)])) == out
+    deltas_366 = pl.Series([timedelta(days=i) for i in range(366)])
+    assert (days_2020 - date(2020, 1, 1)).series_equal(deltas_366)
+    # subtracting a timedelta literal from a timedelta series
+    deltas = pl.Series([timedelta(days=i) for i in range(2, 32)])
+    out = pl.Series([timedelta(days=i) for i in range(1, 31)])
+    assert (deltas - timedelta(days=1)).series_equal(out)
+    # adding a timedelta literal to a date / datetime series
+    out = pl.date_range(datetime(2019, 12, 31), datetime(2020, 12, 30),
+                        interval="1d")
+    assert (days_2020 - timedelta(days=1)).series_equal(out)
+    assert (deltas_366 + datetime(2020, 1, 1)).series_equal(days_2020)
+    # should also work on dates + convert to Datetime type
+    assert (deltas_366 + date(2020, 1, 1)).series_equal(days_2020)
+    assert (date(2020, 1, 1) + deltas_366).series_equal(days_2020)
+    deltas_366 = pl.Series([timedelta(days=i) for i in range(365, -1, -1)])
+    assert (date(2020, 12, 31) - deltas_366).series_equal(days_2020)
 
 
 def test_diff_datetime() -> None:

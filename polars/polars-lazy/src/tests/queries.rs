@@ -560,6 +560,40 @@ fn test_lazy_query_10() {
 
 #[test]
 #[cfg(feature = "temporal")]
+fn test_lazy_query_11() {
+    use polars_core::export::chrono::Duration as ChronoDuration;
+    let date = NaiveDate::from_ymd(2021, 3, 5);
+    let x: Series = DatetimeChunked::new_from_naive_datetime(
+        "x",
+        &*vec![
+            NaiveDateTime::new(date, NaiveTime::from_hms(2, 0, 0)),
+            NaiveDateTime::new(date, NaiveTime::from_hms(3, 0, 0)),
+            NaiveDateTime::new(date, NaiveTime::from_hms(4, 0, 0)),
+        ],
+        TimeUnit::Milliseconds,
+    )
+    .into();
+    let y: Series = DatetimeChunked::new_from_naive_datetime(
+        "y",
+        &*vec![
+            NaiveDateTime::new(date, NaiveTime::from_hms(1, 0, 0)),
+            NaiveDateTime::new(date, NaiveTime::from_hms(2, 0, 0)),
+            NaiveDateTime::new(date, NaiveTime::from_hms(3, 0, 0)),
+        ],
+        TimeUnit::Milliseconds,
+    )
+    .into();
+    let df = DataFrame::new(vec![x]).unwrap();
+    let out = df
+        .lazy()
+        .select(&[(col("x") - lit(ChronoDuration::hours(1))).alias("y")])
+        .collect()
+        .unwrap();
+    assert!(out.column("y").unwrap().series_equal(&y));
+}
+
+#[test]
+#[cfg(feature = "temporal")]
 fn test_lazy_query_7() {
     let date = NaiveDate::from_ymd(2021, 3, 5);
     let dates = vec![

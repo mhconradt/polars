@@ -348,11 +348,15 @@ class Series:
         return wrap_s(f(other))
 
     def __add__(self, other: Any) -> "Series":
+        if isinstance(other, (datetime, timedelta, date)):
+            return self + Series([other])
         if isinstance(other, str):
             other = Series("", [other])
         return self._arithmetic(other, "add", "add_<>")
 
     def __sub__(self, other: Any) -> "Series":
+        if isinstance(other, (datetime, timedelta, date)):
+            return self - Series([other])
         return self._arithmetic(other, "sub", "sub_<>")
 
     def __truediv__(self, other: Any) -> "Series":
@@ -378,9 +382,13 @@ class Series:
         return self._arithmetic(other, "rem", "rem_<>_rhs")
 
     def __radd__(self, other: Any) -> "Series":
+        if isinstance(other, (datetime, timedelta, date)):
+            return Series([other]) + self
         return self._arithmetic(other, "add", "add_<>_rhs")
 
     def __rsub__(self, other: Any) -> "Series":
+        if isinstance(other, (datetime, timedelta, date)):
+            return Series([other]) - self
         return self._arithmetic(other, "sub", "sub_<>_rhs")
 
     def __invert__(self) -> "Series":

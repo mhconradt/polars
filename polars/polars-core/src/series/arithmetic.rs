@@ -348,7 +348,7 @@ pub(crate) fn coerce_lhs_rhs<'a>(
 // Handle (Date | Datetime) +/- (Duration) | (Duration) +/- (Date | Datetime)
 // Time arithmetic is only implemented on the date / datetime so ensure that's on left
 
-fn coerce_time_units<'a>(
+pub(crate) fn coerce_time_units<'a>(
     lhs: &'a Series,
     rhs: &'a Series,
 ) -> Result<(Cow<'a, Series>, Cow<'a, Series>)> {
@@ -700,6 +700,7 @@ where
 
 #[cfg(test)]
 mod test {
+    use super::coerce_time_units;
     use crate::prelude::*;
 
     #[test]
@@ -794,5 +795,26 @@ mod test {
         );
         let out = s_f64.checked_div_num(0.0f64).unwrap();
         assert_eq!(Vec::from(out.f64().unwrap()), &[None, None, None]);
+    }
+
+    #[test]
+    #[cfg(feature = "temporal")]
+    fn test_time_coercion() -> Result<()> {
+        let a = Int64Chunked::new("", &[1, 2, 3])
+            .into_datetime(TimeUnit::Milliseconds, None)
+            .into_series();
+        let b = Int64Chunked::new("", &[2, 3, 4])
+            .into_datetime(TimeUnit::Milliseconds, None)
+            .into_series();
+        let c = Int64Chunked::full("", 1_000_000, a.len())
+            .into_duration(TimeUnit::Nanoseconds)
+            .into_series();
+        let out = coerce_time_units(&c, &b)?;
+        assert_eq!(out.0.dtype(), &DataType::Duration(TimeUnit::Milliseconds));
+        assert_eq!(
+            out.1.dtype(),
+            &DataType::Datetime(TimeUnit::Milliseconds, None)
+        );
+        Ok(())
     }
 }

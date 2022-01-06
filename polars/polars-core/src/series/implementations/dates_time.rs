@@ -826,7 +826,6 @@ mod test {
                 .into_duration(TimeUnit::Nanoseconds)
                 .into_series()
         );
-        // assert_eq!(a.add_to(&c)?, b);
         Ok(())
     }
 }
