@@ -383,12 +383,12 @@ class Series:
 
     def __radd__(self, other: Any) -> "Series":
         if isinstance(other, (datetime, timedelta, date)):
-            return Series([other]) + self
+            return (Series([other]) + self).rename(self.name)
         return self._arithmetic(other, "add", "add_<>_rhs")
 
     def __rsub__(self, other: Any) -> "Series":
         if isinstance(other, (datetime, timedelta, date)):
-            return Series([other]) - self
+            return (Series([other]) - self).rename(self.name)
         return self._arithmetic(other, "sub", "sub_<>_rhs")
 
     def __invert__(self) -> "Series":
